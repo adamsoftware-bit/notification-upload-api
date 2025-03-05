@@ -2,16 +2,15 @@ const nodemailer = require("nodemailer");
 
 class GmailSender {
   constructor(credentials) {
+    console.log(credentials);
     this.transporter = nodemailer.createTransport({
-      service: "gmail",
+      port: credentials.port,              
+      host: credentials.host,
       auth: {
-        type: "OAuth2",
-        user: "adausencias@gmail.com",
-        pass: process.env.PRIVATE_GMAIL_PASS,
-        clientId: credentials.client_id,
-        clientSecret: credentials.client_secret,
-        refreshToken: credentials.refresh_token,
+        user: credentials.user,
+        pass: credentials.pass,
       },
+      secure: true,
     });
   }
 

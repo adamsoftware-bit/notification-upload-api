@@ -12,6 +12,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+console.log(process.env.PORT);
 const PORT = process.env.PORT || 3001;
 
 cloudinary.config({
@@ -24,9 +25,10 @@ app.post("/send-email", async (req, res) => {
 
   try {
     const gmailSender = new GmailSender({
-      client_id: process.env.PRIVATE_GMAIL_CLIENT_ID,
-      client_secret: process.env.PRIVATE_GMAIL_CLIENT_SECRET,
-      refresh_token: process.env.PRIVATE_GMAIL_REFRESH_TOKEN,
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
     });
     await gmailSender.sendEmail(to, subject, text);
     res.status(200).send("Correo enviado con éxito");
