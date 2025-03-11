@@ -4,7 +4,7 @@ class GmailSender {
   constructor(credentials) {
     console.log(credentials);
     this.transporter = nodemailer.createTransport({
-      port: credentials.port,              
+      port: credentials.port,
       host: credentials.host,
       auth: {
         user: credentials.user,
@@ -19,7 +19,7 @@ class GmailSender {
       from: "adausencias@gmail.com",
       to,
       subject,
-      text,
+      html: text,
     };
 
     try {
