@@ -7,6 +7,8 @@ const cors = require("cors");
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
+const archiver = require('archiver');
+const stream = require('stream');
 
 const app = express();
 app.use(express.json());
@@ -37,6 +39,7 @@ app.post("/send-email", async (req, res) => {
     res.status(500).send("Error enviando el correo");
   }
 });
+
 app.post("/upload-pdf", upload.array("pdfs"), async (req, res) => {
   const { radicado } = req.body;
   const files = req.files;
@@ -49,9 +52,12 @@ app.post("/upload-pdf", upload.array("pdfs"), async (req, res) => {
 
   try {
     const uploadPromises = files.map((file) => {
+      const fileExtension = path.extname(file.originalname).substring(1);
+      const fileName = path.basename(file.originalname, path.extname(file.originalname));
       return cloudinary.uploader.upload(file.path, {
         resource_type: "auto",
         folder: `radicados/${radicado}`,
+        public_id: `${fileName}.${fileExtension}`,
       });
     });
 
@@ -95,6 +101,58 @@ app.delete("/delete-file/:radicado", async (req, res) => {
   } catch (error) {
     console.error("Error eliminando la carpeta y archivos:", error);
     res.status(500).send("Error eliminando la carpeta y archivos");
+  }
+});
+
+app.get("/download-file/:radicado", async (req, res) => {
+  const { radicado } = req.params;
+
+  if (!radicado) {
+    return res.status(400).send("Número de radicado es requerido");
+  }
+
+  try {
+    // Obtener la lista de archivos en la carpeta del radicado
+    const resources = await cloudinary.api.resources({
+      type: 'upload',
+      prefix: `radicados/${radicado}`
+    });
+
+    if (resources.resources.length === 0) {
+      return res.status(404).send("No se encontraron archivos para el radicado proporcionado");
+    }
+
+    // Crear un archivo .zip en memoria
+    const zipStream = new stream.PassThrough();
+    const archive = archiver('zip', {
+      zlib: { level: 9 }
+    });
+
+    archive.on('error', (err) => {
+      throw err;
+    });
+
+    res.attachment(`${radicado}.zip`);
+    archive.pipe(zipStream);
+    zipStream.pipe(res);
+
+    for (const resource of resources.resources) {
+      const fileStream = await cloudinary.utils.download_archive_url({
+        public_ids: [resource.public_id],
+        resource_type: resource.format,
+        type: 'upload',
+        target_format: 'zip'
+      });
+
+      // Cambiar el nombre del archivo para que no incluya la carpeta
+      const fileName = `${resource.public_id.split('/').pop()}.${resource.format}`;
+      archive.append(fileStream, { name: fileName });
+    }
+
+    await archive.finalize();
+  } catch (error) {
+    console.error("Error descargando los archivos:", error);
+    res.status(500).send("Error descargando los archivos");
   }
 });
 

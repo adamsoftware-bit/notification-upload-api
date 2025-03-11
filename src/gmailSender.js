@@ -2,7 +2,6 @@ const nodemailer = require("nodemailer");
 
 class GmailSender {
   constructor(credentials) {
-    console.log(credentials);
     this.transporter = nodemailer.createTransport({
       port: credentials.port,
       host: credentials.host,
