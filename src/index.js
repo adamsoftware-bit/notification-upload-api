@@ -3,12 +3,13 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const GmailSender = require("./gmailSender");
+const { createReport } = require("./reportService");
 const cors = require("cors");
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
-const archiver = require('archiver');
-const stream = require('stream');
+const archiver = require("archiver");
+const stream = require("stream");
 
 const app = express();
 app.use(express.json());
@@ -21,6 +22,12 @@ cloudinary.config({
   cloud_name: process.env.PRIVATE_CLOUDINARY_CLOUD_NAME,
   api_key: process.env.PRIVATE_CLOUDINARY_API_KEY,
   api_secret: process.env.PRIVATE_CLOUDINARY_API_SECRET,
+});
+
+app.post("/create-report", async (req, res) => {
+  const { startDate, endDate } = req.body;
+  const filePath = await createReport({ startDate, endDate });
+  res.download(filePath);
 });
 app.post("/send-email", async (req, res) => {
   const { to, subject, text } = req.body;
