@@ -12,7 +12,7 @@ const createWorkbookTemplate = async () => {
     {
       header: "No. DE RADICADO",
       key: "radicado",
-      width: 25,
+      width: 35,
       style: {
         font: {
           size: 22,
@@ -32,7 +32,7 @@ const createWorkbookTemplate = async () => {
     {
       header: "MEDIO DE SOLICITUD",
       key: "medium",
-      width: 20,
+      width: 30,
       style: {
         font: {
           size: 22,
@@ -42,7 +42,7 @@ const createWorkbookTemplate = async () => {
     {
       header: "NOMBRE DEL PETICIONARIO O REMITENTE",
       key: "petitioner",
-      width: 35,
+      width: 50,
       style: {
         font: {
           size: 22,
@@ -52,7 +52,7 @@ const createWorkbookTemplate = async () => {
     {
       header: "DIRECCION",
       key: "address",
-      width: 50,
+      width: 60,
       style: {
         font: {
           size: 22,
@@ -62,7 +62,7 @@ const createWorkbookTemplate = async () => {
     {
       header: "ASUNTO",
       key: "subject",
-      width: 40,
+      width: 60,
       style: {
         font: {
           size: 22,
@@ -72,7 +72,7 @@ const createWorkbookTemplate = async () => {
     {
       header: "TIPO DE SOLICITUD",
       key: "type",
-      width: 30,
+      width: 60,
       style: {
         font: {
           size: 22,
@@ -82,7 +82,7 @@ const createWorkbookTemplate = async () => {
     {
       header: "RESPONSABLE DE DAR RESPUESTA",
       key: "responsible",
-      width: 40,
+      width: 60,
       style: {
         font: {
           size: 22,
@@ -92,7 +92,7 @@ const createWorkbookTemplate = async () => {
     {
       header: "FECHA DE VENCIMIENTO",
       key: "expirationDate",
-      width: 15,
+      width: 60,
       style: {
         font: {
           size: 22,
@@ -102,7 +102,7 @@ const createWorkbookTemplate = async () => {
     {
       header: "No OFICIO DE RESPUESTA",
       key: "responseCode",
-      width: 15,
+      width: 60,
       style: {
         font: {
           size: 22,
@@ -112,7 +112,7 @@ const createWorkbookTemplate = async () => {
     {
       header: "FECHA OFICIO DE RESPUESTA",
       key: "responseDate",
-      width: 15,
+      width: 60,
       style: {
         font: {
           size: 22,
@@ -122,7 +122,7 @@ const createWorkbookTemplate = async () => {
     {
       header: "OBSERVACION",
       key: "observation",
-      width: 30,
+      width: 50,
       style: {
         font: {
           size: 22,
@@ -158,6 +158,7 @@ const createWorkbookTemplate = async () => {
     worksheet.getRow(i).alignment = { horizontal: "center" };
     worksheet.getRow(i).font = {
       size: 24,
+      bold: true,
     };
   }
 
