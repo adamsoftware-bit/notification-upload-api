@@ -10,6 +10,8 @@ const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
 const archiver = require("archiver");
 const stream = require("stream");
+const fileService = require('./fileService');
+const { console } = require("inspector");
 
 const app = express();
 app.use(express.json());
@@ -194,6 +196,29 @@ app.delete("/delete-files-by-urls", async (req, res) => {
     console.error("Error eliminando los archivos:", error);
     res.status(500).send("Error eliminando los archivos");
   }
+});
+
+
+app.post('/files/upload', upload.array('pdfs'), (req, res) => {
+  console.log(req.files);
+  console.log(req.body);
+  fileService.saveFiles(req, res);
+});
+
+app.delete('/files/:radicado', (req, res) => {
+  fileService.deleteFiles(req, res);
+});
+
+app.post('/files/delete-by-urls', (req, res) => {
+  fileService.deleteFilesByUrls(req, res);
+});
+
+app.get('/files/download/:radicado', (req, res) => {
+  fileService.downloadFiles(req, res);
+});
+
+app.get('/files/view/:radicado', (req, res) => {
+  fileService.streamFiles(req, res);
 });
 
 app.listen(PORT, () => {
