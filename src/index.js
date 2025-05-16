@@ -12,6 +12,8 @@ const archiver = require("archiver");
 const stream = require("stream");
 const fileService = require('./fileService');
 const { console } = require("inspector");
+const schedule = require('node-schedule');
+const NotificationService = require('./notificationService');
 
 const app = express();
 app.use(express.json());
@@ -24,6 +26,20 @@ cloudinary.config({
   cloud_name: process.env.PRIVATE_CLOUDINARY_CLOUD_NAME,
   api_key: process.env.PRIVATE_CLOUDINARY_API_KEY,
   api_secret: process.env.PRIVATE_CLOUDINARY_API_SECRET,
+});
+
+// Inicializar el servicio de notificaciones
+const notificationService = new NotificationService();
+
+// Configurar el scheduler para ejecutar a las 8 AM hora Colombia (UTC-5)
+schedule.scheduleJob('0 13 * * *', async () => {
+  console.log('Ejecutando verificación de casos próximos a expirar...');
+  try {
+    await notificationService.checkExpiringCases();
+    console.log('Verificación completada exitosamente');
+  } catch (error) {
+    console.error('Error durante la verificación de casos:', error);
+  }
 });
 
 app.post("/create-report", async (req, res) => {
