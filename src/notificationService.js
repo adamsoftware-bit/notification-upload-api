@@ -1,59 +1,63 @@
+require("dotenv").config();
 const Supabase = require("@supabase/supabase-js");
 const GmailSender = require("./gmailSender");
+const { differenceInDays } = require('date-fns/differenceInDays');
 
-class NotificationService {
-    constructor() {
-        this.supabase = Supabase.createClient(
-            process.env.SUPABASE_URL,
-            process.env.SUPABASE_ANON_KEY
-        );
-        this.gmailSender = new GmailSender({
-            host: process.env.SMTP_HOST,
-            port: process.env.SMTP_PORT,
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-        });
+const supabase = Supabase.createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_ANON_KEY
+);
+
+const gmailSender = new GmailSender({
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+});
+const formatDateToYYYYMMDD = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+const checkExpiringCases = async () => {
+
+    const date = new Date().toLocaleString("en-US", { timeZone: "America/Bogota" });
+    const colombiaDateForSearch = new Date(date);
+    const oneDayFromNow = formatDateToYYYYMMDD(new Date(colombiaDateForSearch.setDate(colombiaDateForSearch.getDate() + 2)));
+    const threeDaysFromNow = formatDateToYYYYMMDD(new Date(colombiaDateForSearch.setDate(colombiaDateForSearch.getDate() + 2))); // +2 porque now ya tiene +1
+    const fiveDaysFromNow = formatDateToYYYYMMDD(new Date(colombiaDateForSearch.setDate(colombiaDateForSearch.getDate() + 2))); // +2 porque now ya tiene +3;
+
+    const { data: cases, error } = await supabase
+        .from("cases")
+        .select(`
+      *,
+      users (
+        id,
+        email_user_auth,
+        full_name
+      )
+    `).filter("expiration_date", "in", `(${oneDayFromNow}, ${threeDaysFromNow}, ${fiveDaysFromNow})`);
+
+    if (error) {
+        console.error("Error al consultar casos:", error);
+        return;
     }
 
-    async checkExpiringCases() {
-        const now = new Date();
-        const oneDayFromNow = new Date(now);
-        oneDayFromNow.setDate(now.getDate() + 1);
+    for (const case_ of cases) {
+        if (!case_.users?.email_user_auth) continue;
 
-        const threeDaysFromNow = new Date(now);
-        threeDaysFromNow.setDate(now.getDate() + 3);
+        const [year, month, day] = case_.expiration_date.split('-');
+        const expirationDate = new Date(year, month - 1, day-1); 
+        const daysUntilExpiration = differenceInDays(
+            expirationDate.setHours(0,0,0,0),
+            new Date(date).setHours(0,0,0,0)
+        );
 
-        const fiveDaysFromNow = new Date(now);
-        fiveDaysFromNow.setDate(now.getDate() + 5);
+        const caseUrl = `${process.env.VITE_FRONTEND_URL}/documents/${case_.radicado}`;
 
-        const { data: cases, error } = await this.supabase
-            .from("cases")
-            .select(`
-        *,
-        users (
-          id,
-          email_user_auth,
-          full_name
-        )
-      `)
-            .or(`expiration_date.eq.${oneDayFromNow.toISOString()},expiration_date.eq.${threeDaysFromNow.toISOString()},expiration_date.eq.${fiveDaysFromNow.toISOString()}`);
-
-        if (error) {
-            console.error("Error al consultar casos:", error);
-            return;
-        }
-
-        for (const case_ of cases) {
-            if (!case_.users?.email_user_auth) continue;
-
-            const daysUntilExpiration = Math.ceil(
-                (new Date(case_.expiration_date) - now) / (1000 * 60 * 60 * 24)
-            );
-
-            const caseUrl = `${process.env.VITE_FRONTEND_URL}/documents/${case_.radicado}`;
-
-            const emailSubject = `Caso ${case_.radicado} próximo a expirar`;
-            const emailText = `
+        const emailSubject = `Caso ${case_.radicado} próximo a expirar`;
+        const emailText = `
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -114,13 +118,15 @@ class NotificationService {
             padding: 10px 20px;
             margin: 20px 0;
             font-size: 16px;
-            color: #ffffff;
-            background-color: #dc3545;
+            color: #ffffff !important;
+            background-color: #4F46E5;
+            border-color: #4F46E5;
             text-decoration: none;
             border-radius: 5px;
         }
         .button:hover {
-            background-color: #c82333;
+            background-color: #4338CA;
+            border-color: #4338CA;
         }
         .warning {
             color: #dc3545;
@@ -158,20 +164,21 @@ class NotificationService {
     </div>
 </body>
 </html>
-      `;
+    `;
 
-            try {
-                await this.gmailSender.sendEmail(
-                    case_.users.email_user_auth,
-                    emailSubject,
-                    emailText
-                );
-                console.log(`Notificación enviada para el caso ${case_.radicado}`);
-            } catch (error) {
-                console.error(`Error al enviar notificación para el caso ${case_.radicado}:`, error);
-            }
+        try {
+            await gmailSender.sendEmail(
+                case_.users.email_user_auth,
+                emailSubject,
+                emailText
+            );
+            console.log(`Notificación enviada para el caso ${case_.radicado}`);
+        } catch (error) {
+            console.error(`Error al enviar notificación para el caso ${case_.radicado}:`, error);
         }
     }
-}
+};
 
-module.exports = NotificationService; 
+module.exports = {
+    checkExpiringCases,
+}; 

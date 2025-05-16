@@ -13,7 +13,7 @@ const stream = require("stream");
 const fileService = require('./fileService');
 const { console } = require("inspector");
 const schedule = require('node-schedule');
-const NotificationService = require('./notificationService');
+const { checkExpiringCases } = require('./notificationService');
 
 const app = express();
 app.use(express.json());
@@ -28,14 +28,14 @@ cloudinary.config({
   api_secret: process.env.PRIVATE_CLOUDINARY_API_SECRET,
 });
 
-// Inicializar el servicio de notificaciones
-const notificationService = new NotificationService();
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+});
 
-// Configurar el scheduler para ejecutar a las 8 AM hora Colombia (UTC-5)
-schedule.scheduleJob('0 13 * * *', async () => {
+schedule.scheduleJob('0 * * ? * *', async () => {
   console.log('Ejecutando verificación de casos próximos a expirar...');
   try {
-    await notificationService.checkExpiringCases();
+    await checkExpiringCases();
     console.log('Verificación completada exitosamente');
   } catch (error) {
     console.error('Error durante la verificación de casos:', error);
@@ -235,8 +235,4 @@ app.get('/files/download/:radicado', (req, res) => {
 
 app.get('/files/view/:radicado', (req, res) => {
   fileService.streamFiles(req, res);
-});
-
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
