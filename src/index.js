@@ -32,7 +32,7 @@ app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
 
-schedule.scheduleJob('0 * * ? * *', async () => {
+schedule.scheduleJob('0 13 * * *', async () => {
   console.log('Ejecutando verificación de casos próximos a expirar...');
   try {
     await checkExpiringCases();
