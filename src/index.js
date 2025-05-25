@@ -57,7 +57,8 @@ app.post("/send-email", async (req, res) => {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     });
-    await gmailSender.sendEmail(to, subject, text);
+    const from = process.env.FROM_EMAIL || process.env.SMTP_USER || "Archivo Pueblo Nuevo <pueblonuevoarchivo@gmail.com>"; 
+    await gmailSender.sendEmail(to, subject, text, from);
     res.status(200).send("Correo enviado con éxito");
   } catch (error) {
     console.error("Error enviando el correo:", error);

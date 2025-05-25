@@ -13,9 +13,9 @@ class GmailSender {
     });
   }
 
-  async sendEmail(to, subject, text) {
+  async sendEmail(to, subject, text, from) {
     const mailOptions = {
-      from: "adausencias@gmail.com",
+      from: from,
       to,
       subject,
       html: text,
