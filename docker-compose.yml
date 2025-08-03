@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  notification-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"  # Exponemos directamente el puerto 3001
+    expose:
+      - "3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+      - BASE_UPLOAD_DIR=/app/uploads
+    volumes:
+      # Montar la carpeta de uploads del host en el contenedor
+      - ./uploads:/app/uploads
+      # Montar .env para usar las variables de entorno
+      - ./.env:/app/.env
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./uploads:/uploads
+    depends_on:
+      - notification-api
+    restart: unless-stopped

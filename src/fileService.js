@@ -2,7 +2,14 @@ const fs = require('fs');
 const { console } = require('inspector');
 const path = require('path');
 
+// Priorizar la variable de entorno BASE_UPLOAD_DIR
 const BASE_UPLOAD_DIR = process.env.BASE_UPLOAD_DIR || path.join(__dirname, 'uploads');
+
+// Asegurar que el directorio base de uploads exista
+if (!fs.existsSync(BASE_UPLOAD_DIR)) {
+    console.log(`Creando directorio base: ${BASE_UPLOAD_DIR}`);
+    fs.mkdirSync(BASE_UPLOAD_DIR, { recursive: true });
+}
 
 class FileService {
     async saveFiles(req, res) {

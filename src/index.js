@@ -7,7 +7,30 @@ const { createReport } = require("./reportService");
 const cors = require("cors");
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
-const upload = multer({ dest: "uploads/" });
+
+// Configuración para manejar archivos grandes
+const uploadDir = process.env.BASE_UPLOAD_DIR || path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Configurar multer para manejar archivos grandes
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 * 1024 // 5GB en bytes
+  }
+});
+
 const archiver = require("archiver");
 const stream = require("stream");
 const fileService = require('./fileService');
