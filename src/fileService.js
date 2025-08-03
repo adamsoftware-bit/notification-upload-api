@@ -36,16 +36,19 @@ class FileService {
                 fs.mkdirSync(uploadDir, { recursive: true });
             }
 
+            const savedFiles = [];
+
             files.forEach((file) => {
                 const filePath = path.join(uploadDir, file.originalname);
                 console.log(`Guardando archivo en: ${filePath}`);
                 fs.writeFileSync(filePath, fs.readFileSync(file.path));
-                fs.unlinkSync(file.path); 
+                fs.unlinkSync(file.path);
+                savedFiles.push(filePath);
             });
 
             res.status(200).send({
                 message: "Archivos guardados con éxito",
-                directory: uploadDir,
+                results: savedFiles,
             });
         } catch (error) {
             console.error("Error guardando los archivos:", error);
