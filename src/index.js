@@ -260,3 +260,11 @@ app.get('/files/download/:radicado', (req, res) => {
 app.get('/files/view/:radicado', (req, res) => {
   fileService.streamFiles(req, res);
 });
+
+app.post('/files/download-single', (req, res) => {
+  fileService.downloadSingleFile(req, res);
+});
+
+app.post('/files/get-info', (req, res) => {
+  fileService.getFileInfo(req, res);
+});

@@ -233,6 +233,123 @@ class FileService {
             res.status(500).send("Error obteniendo los archivos");
         }
     }
+
+    async downloadSingleFile(req, res) {
+        const { filePath: requestedPath } = req.body;
+
+        if (!requestedPath || typeof requestedPath !== 'string') {
+            return res.status(400).send("La ruta del archivo es requerida");
+        }
+
+        try {
+            // Determinar si la ruta es absoluta o relativa
+            const absolutePath = path.isAbsolute(requestedPath) 
+                ? requestedPath 
+                : path.join(BASE_UPLOAD_DIR, requestedPath);
+
+            console.log("Ruta absoluta del archivo:", absolutePath);
+
+            if (!fs.existsSync(absolutePath)) {
+                return res.status(404).send("El archivo especificado no existe");
+            }
+
+            const stats = fs.statSync(absolutePath);
+            if (!stats.isFile()) {
+                return res.status(400).send("La ruta especificada no es un archivo");
+            }
+
+            const archiver = require('archiver');
+            const fileName = path.basename(absolutePath);
+            const fileNameWithoutExt = path.parse(fileName).name;
+            const zipFileName = `${fileNameWithoutExt}.zip`;
+
+            // Configurar headers para la descarga
+            res.setHeader('Content-Type', 'application/zip');
+            res.setHeader('Content-Disposition', `attachment; filename="${zipFileName}"`);
+
+            const archive = archiver('zip', { zlib: { level: 9 } });
+
+            archive.on('error', (err) => {
+                console.error("Error creando el archivo ZIP:", err);
+                res.status(500).send("Error creando el archivo ZIP");
+            });
+
+            archive.pipe(res);
+            archive.file(absolutePath, { name: fileName });
+            archive.finalize();
+
+        } catch (error) {
+            console.error("Error descargando el archivo:", error);
+            res.status(500).send("Error descargando el archivo: " + error.message);
+        }
+    }
+
+    async getFileInfo(req, res) {
+        const { filePath: requestedPath } = req.body;
+
+        if (!requestedPath || typeof requestedPath !== 'string') {
+            return res.status(400).send("La ruta del archivo es requerida");
+        }
+
+        try {
+            // Determinar si la ruta es absoluta o relativa
+            const absolutePath = path.isAbsolute(requestedPath) 
+                ? requestedPath 
+                : path.join(BASE_UPLOAD_DIR, requestedPath);
+
+            console.log("Ruta absoluta del archivo:", absolutePath);
+
+            if (!fs.existsSync(absolutePath)) {
+                return res.status(404).send("El archivo especificado no existe");
+            }
+
+            const stats = fs.statSync(absolutePath);
+            if (!stats.isFile()) {
+                return res.status(400).send("La ruta especificada no es un archivo");
+            }
+
+            const fileName = path.basename(absolutePath);
+            const fileExtension = path.extname(fileName).substring(1).toLowerCase();
+            const fileSize = stats.size;
+            const lastModified = stats.mtime;
+
+            // Leer el contenido del archivo y convertirlo a base64
+            const fileContent = fs.readFileSync(absolutePath);
+            const base64Content = fileContent.toString('base64');
+
+            // Determinar el tipo MIME basado en la extensión
+            const mimeTypes = {
+                'pdf': 'application/pdf',
+                'jpg': 'image/jpeg',
+                'jpeg': 'image/jpeg',
+                'png': 'image/png',
+                'gif': 'image/gif',
+                'txt': 'text/plain',
+                'doc': 'application/msword',
+                'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'xls': 'application/vnd.ms-excel',
+                'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            };
+
+            const mimeType = mimeTypes[fileExtension] || 'application/octet-stream';
+
+            res.status(200).send({
+                fileName: fileName,
+                fileExtension: fileExtension,
+                fileSize: fileSize,
+                lastModified: lastModified,
+                mimeType: mimeType,
+                filePath: absolutePath,
+                content: base64Content,
+                // URL para abrir en nueva ventana (data URL)
+                dataUrl: `data:${mimeType};base64,${base64Content}`
+            });
+
+        } catch (error) {
+            console.error("Error obteniendo información del archivo:", error);
+            res.status(500).send("Error obteniendo información del archivo: " + error.message);
+        }
+    }
 }
 
 module.exports = new FileService();
