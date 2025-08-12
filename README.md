@@ -1,28 +1,91 @@
 # Notification Upload API
 
-Esta API permite enviar correos electrónicos, subir archivos (hasta 5GB) y manejar notificaciones.
+Esta API permite enviar correos electrónicos, subir archivos (hasta 5GB) y manejar notificaciones para integrarse con aplicaciones frontend.
 
-## Configuración con Docker
+## 🚀 Configuración Rápida
 
-1. Clona el repositorio.
-2. Configura las variables de entorno en el archivo `.env`.
-3. Asegúrate de tener Docker y Docker Compose instalados en tu sistema.
+### Prerrequisitos
+- Docker Desktop instalado y ejecutándose
+- Windows Server o Windows 10/11
+- Puerto 80 y 3001 disponibles
 
-## Uso con Docker
+### Despliegue Automático (Recomendado)
 
-### Iniciar la aplicación con Docker Compose
+1. Clona el repositorio
+2. Ejecuta el script de despliegue:
 
-```bash
-docker-compose up -d
+```powershell
+# Despliegue completo con build
+.\deploy.ps1 -Build
+
+# Solo despliegue (si ya tienes la imagen)
+.\deploy.ps1
+
+# Ver logs en tiempo real
+.\deploy.ps1 -Logs
+
+# Parar servicios
+.\deploy.ps1 -Stop
+
+# Limpiar todo (imágenes, contenedores, volúmenes)
+.\deploy.ps1 -Clean
 ```
 
-Esto iniciará la aplicación en [http://localhost](http://localhost) (puerto 80).
+### Configuración Manual
 
-### Detener la aplicación
+1. **Configura las variables de entorno**:
+   ```bash
+   cp .env.example .env
+   # Edita .env con tus credenciales
+   ```
 
-```bash
-docker-compose down
+2. **Inicia los servicios**:
+   ```bash
+   # Producción
+   docker-compose up -d
+   
+   # Desarrollo (con hot reload)
+   docker-compose -f docker-compose.dev.yml up -d
+   ```
+
+## 🌐 URLs de Acceso
+
+- **API Backend**: http://localhost:3001
+- **Nginx Proxy**: http://localhost
+- **Health Check**: http://localhost/health
+- **Uploads**: http://localhost/uploads/
+
+## 🔧 Configuración del Frontend
+
+Para conectar tu frontend React/Vite con este backend, asegúrate de que tu `VITE_BACKEND_URL` apunte a:
+
+```env
+# En tu frontend .env
+VITE_BACKEND_URL=http://localhost  # Si usas el proxy nginx
+# O
+VITE_BACKEND_URL=http://localhost:3001  # Directamente al backend
 ```
+
+## 📁 Estructura de la API
+
+### Endpoints Principales
+
+- `POST /upload-pdf` - Subir archivos PDF
+- `GET /download-file/:radicado` - Descargar archivos por radicado
+- `DELETE /delete-file/:radicado` - Eliminar archivos
+- `POST /send-email` - Enviar correos electrónicos
+- `POST /create-report` - Generar reportes
+- `GET /health` - Health check
+
+### Endpoints de Archivos (con prefijo /files)
+
+- `POST /files/upload` - Subir archivos
+- `GET /files/download/:radicado` - Descargar por radicado
+- `DELETE /files/:radicado` - Eliminar por radicado
+- `POST /files/delete-by-urls` - Eliminar por URLs
+- `GET /files/view/:radicado` - Ver archivos
+- `POST /files/download-single` - Descargar archivo único
+- `POST /files/get-info` - Obtener información de archivos
 
 ## Volúmenes y Almacenamiento de Archivos
 
