@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   notification-api:
     build:
@@ -5,8 +7,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3001:3001"  # Exponemos directamente el puerto 3001
-    expose:
-      - "3001"
     environment:
       - PORT=3001
       - NODE_ENV=production
@@ -21,34 +21,5 @@ services:
       resources:
         limits:
           memory: 2G
-          cpus: '1.0'
         reservations:
           memory: 1G
-          cpus: '0.5'
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    networks:
-      - app-network
-
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "8080:80"
-      - "443:443"  # Para HTTPS en el futuro
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-      - ./uploads:/uploads
-    depends_on:
-      notification-api:
-        condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - app-network
-
-networks:
-  app-network:
-    driver: bridge

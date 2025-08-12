@@ -1,42 +1,23 @@
-# Use Node.js 20 Alpine as base image for smaller size
-FROM node:20-alpine AS base
+# Use Node.js 20 Alpine as base image
+FROM node:20-alpine
 
-# Install dependencies only when needed
-FROM base AS deps
+# Set working directory
 WORKDIR /app
 
 # Install timezone data and other necessary packages
-RUN apk add --no-cache libc6-compat tzdata
+RUN apk add --no-cache tzdata
 
-# Copy package files
+# Copy package files first for better caching
 COPY package.json pnpm-lock.yaml* ./
 
 # Install dependencies
-RUN corepack enable pnpm && pnpm install --frozen-lockfile
-
-# Production image
-FROM base AS runner
-WORKDIR /app
-
-# Install timezone data
-RUN apk add --no-cache tzdata
-
-# Create non-root user for security
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 appuser
-
-# Copy node_modules from deps stage
-COPY --from=deps /app/node_modules ./node_modules
+RUN corepack enable pnpm && pnpm install --frozen-lockfile --prod
 
 # Copy source code
-COPY --chown=appuser:nodejs . .
+COPY . .
 
-# Create uploads directory with proper permissions
-RUN mkdir -p uploads src/uploads && \
-    chown -R appuser:nodejs uploads src/uploads
-
-# Switch to non-root user
-USER appuser
+# Create uploads directory
+RUN mkdir -p uploads src/uploads
 
 # Expose port
 EXPOSE 3001
