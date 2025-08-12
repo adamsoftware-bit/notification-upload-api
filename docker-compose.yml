@@ -12,7 +12,7 @@ services:
       - NODE_ENV=production
     volumes:
       # Montar la carpeta de uploads del host en el contenedor
-      - ${UPLOADS_PATH:-./uploads}:/app/uploads
+      - ${UPLOADS_PATH:-./uploads}:${BASE_UPLOAD_DIR:-/app/uploads}
       # Montar .env para usar las variables de entorno
       - ./.env:/app/.env
     restart: unless-stopped
