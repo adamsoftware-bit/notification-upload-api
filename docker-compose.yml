@@ -10,10 +10,9 @@ services:
     environment:
       - PORT=3001
       - NODE_ENV=production
-      - BASE_UPLOAD_DIR=/app/uploads
     volumes:
       # Montar la carpeta de uploads del host en el contenedor
-      - ./uploads:/app/uploads
+      - ${UPLOADS_PATH:-./uploads}:/app/uploads
       # Montar .env para usar las variables de entorno
       - ./.env:/app/.env
     restart: unless-stopped
