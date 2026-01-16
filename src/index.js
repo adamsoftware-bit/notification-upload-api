@@ -7,6 +7,7 @@ const { createReport } = require("./reportService");
 const cors = require("cors");
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
+const logService = require('./logService');
 
 // Configuración para manejar archivos grandes
 const uploadDir = process.env.BASE_UPLOAD_DIR || path.join(__dirname, 'uploads');
@@ -278,3 +279,12 @@ app.post('/files/download-single', (req, res) => {
 app.post('/files/get-info', (req, res) => {
   fileService.getFileInfo(req, res);
 });
+
+app.get('/logs', (req, res) => {
+    logService.getLogs(req, res);
+});
+
+app.get('/logs/employee/:id_employee', (req, res) => {
+    logService.getLogsByEmployee(req, res);
+});
+
