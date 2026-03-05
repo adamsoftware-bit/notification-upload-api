@@ -284,7 +284,15 @@ app.get('/logs', (req, res) => {
     logService.getLogs(req, res);
 });
 
+app.get("/logs/report", (req, res) => {
+  logService.generateLogsReport(req, res);
+});
+
 app.get('/logs/employee/:id_employee', (req, res) => {
     logService.getLogsByEmployee(req, res);
+});
+
+app.get("/logs/employee/:id_employee/report", (req, res) => {
+  logService.generateLogsReportByEmployee(req, res);
 });
 
